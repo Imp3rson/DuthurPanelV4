@@ -1,0 +1,743 @@
+-- ============================================
+-- 💠 Imp3rson Extras Hub (v7) — PARTE 1/2
+-- Hub, botões, notify, sistema de carregar
+-- ============================================
+
+local CoreGui      = game:GetService("CoreGui")
+local Players      = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UIS          = game:GetService("UserInputService")
+
+local CONFIG = {
+    ACCENT        = Color3.fromRGB(139, 0, 0),
+    ACCENT_BRIGHT = Color3.fromRGB(255, 40, 40),
+    GREEN         = Color3.fromRGB(60, 160, 80),
+    BG_DARK       = Color3.fromRGB(18, 18, 18),
+    BG_CARD       = Color3.fromRGB(32, 32, 32),
+    FLOAT_POS     = UDim2.new(0, 20, 0, 100),
+    FLOAT_SIZE    = 52,
+}
+
+local SCRIPTS = {
+    { name = "🌐 Universal Panel",   url = "https://rawscripts.net/raw/Universal-Script-Panel-universal-228529" },
+    { name = "👁️ Imp3rson ESP PRO", url = "ESP_PRO" },
+    { name = "🎨 Simple Shaders",    url = "https://rawscripts.net/raw/Universal-Script-Simple-Shaders-68015" },
+    { name = "🌈 Vibrant Colors",    url = "https://rawscripts.net/raw/Universal-Script-Vibrant-Colors-48325" },
+    { name = "🔒 Shift Lock Mobile", url = "https://rawscripts.net/raw/Universal-Script-Shift-Lock-For-Mobile-Remade-Definitive-241711" },
+    { name = "📐 Stretched 4:3",     url = "https://rawscripts.net/raw/Universal-Script-Stretched-Resolution-4:3-rest-aspect-ratio-226525" },
+    { name = "🛫 Fly GUI v3",        url = "https://rawscripts.net/raw/Universal-Script-Fly-gui-v3-30439" },
+    { name = "💃 Emote Script",      url = "https://rawscripts.net/raw/Universal-Script-7yd7-I-Emote-Script-48024" },
+    { name = "⚡ Aimbot Universal",  url = "https://pastebin.com/raw/53XHn9rt" },
+    { name = "🎵 YouTube Music",     url = "https://rawscripts.net/raw/Universal-Script-YouTube-Music-Player-V8-236600" },
+}
+
+-- Compartilha com a Parte 2
+_G.Imp3rsonHub = {
+    CONFIG = CONFIG,
+    SCRIPTS = SCRIPTS,
+    CoreGui = CoreGui,
+    Players = Players,
+    TweenService = TweenService,
+    UIS = UIS,
+    State = { hubOpen = false, loaded = {} },
+}
+
+local State = _G.Imp3rsonHub.State
+local function isSafe(v) return typeof(v) == "Instance" and v.Parent ~= nil end
+_G.Imp3rsonHub.isSafe = isSafe
+
+----------------------------------------------------------------
+-- NOTIFY
+----------------------------------------------------------------
+local function notify(text, color)
+    color = color or CONFIG.ACCENT_BRIGHT
+    pcall(function()
+        local g = CoreGui:FindFirstChild("Imp3rsonNotify")
+        if not g then
+            g = Instance.new("ScreenGui")
+            g.Name = "Imp3rsonNotify"
+            g.ResetOnSpawn = false
+            g.IgnoreGuiInset = true
+            g.DisplayOrder = 100
+            g.Parent = CoreGui
+        end
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 260, 0, 44)
+        frame.Position = UDim2.new(0.5, -130, 0, -60)
+        frame.BackgroundColor3 = CONFIG.BG_DARK
+        frame.BorderSizePixel = 0
+        frame.Parent = g
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = color; stroke.Thickness = 2; stroke.Parent = frame
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, -20, 1, 0)
+        lbl.Position = UDim2.new(0, 12, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = text
+        lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        lbl.Font = Enum.Font.GothamBold
+        lbl.TextSize = 13
+        lbl.TextWrapped = true
+        lbl.Parent = frame
+        TweenService:Create(frame, TweenInfo.new(0.3),
+            { Position = UDim2.new(0.5, -130, 0, 20) }):Play()
+        task.delay(2.2, function()
+            if isSafe(frame) then
+                local t = TweenService:Create(frame, TweenInfo.new(0.3),
+                    { Position = UDim2.new(0.5, -130, 0, -60) })
+                t:Play()
+                t.Completed:Connect(function()
+                    if isSafe(frame) then frame:Destroy() end
+                end)
+            end
+        end)
+    end)
+end
+_G.Imp3rsonHub.notify = notify
+
+----------------------------------------------------------------
+-- TOGGLE
+----------------------------------------------------------------
+local function setHubVisibility(open)
+    State.hubOpen = open
+    local hub = CoreGui:FindFirstChild("Imp3rsonExtrasHub")
+    if hub then hub.Enabled = open end
+end
+
+local function toggleHub()
+    setHubVisibility(not State.hubOpen)
+end
+_G.Imp3rsonHub.toggleHub = toggleHub
+
+----------------------------------------------------------------
+-- BOTÃO FLUTUANTE
+----------------------------------------------------------------
+local function createFloatingButton()
+    if CoreGui:FindFirstChild("Imp3rsonFloat") then return end
+    local g = Instance.new("ScreenGui")
+    g.Name = "Imp3rsonFloat"
+    g.ResetOnSpawn = false
+    g.IgnoreGuiInset = true
+    g.DisplayOrder = 99
+    g.Parent = CoreGui
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, CONFIG.FLOAT_SIZE, 0, CONFIG.FLOAT_SIZE)
+    btn.Position = CONFIG.FLOAT_POS
+    btn.BackgroundColor3 = CONFIG.ACCENT
+    btn.BorderSizePixel = 0
+    btn.Text = "💠"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 26
+    btn.AutoButtonColor = false
+    btn.Parent = g
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+    local s = Instance.new("UIStroke")
+    s.Color = CONFIG.ACCENT_BRIGHT; s.Thickness = 2; s.Parent = btn
+
+    local dragging, dragStart, startPos
+    btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true; dragStart = input.Position; startPos = btn.Position
+        end
+    end)
+    btn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+            if dragStart then
+                local d = input.Position - dragStart
+                if math.abs(d.X) < 10 and math.abs(d.Y) < 10 then
+                    toggleHub()
+                end
+            end
+            dragStart = nil
+        end
+    end)
+    btn.InputChanged:Connect(function(input)
+        if not dragging then return end
+        if input.UserInputType == Enum.UserInputType.Touch then
+            local d = input.Position - dragStart
+            btn.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + d.X,
+                startPos.Y.Scale, startPos.Y.Offset + d.Y)
+        end
+    end)
+end
+
+----------------------------------------------------------------
+-- HUB
+----------------------------------------------------------------
+local function createHub()
+    if CoreGui:FindFirstChild("Imp3rsonExtrasHub") then
+        CoreGui.Imp3rsonExtrasHub.Enabled = State.hubOpen
+        return
+    end
+    local g = Instance.new("ScreenGui")
+    g.Name = "Imp3rsonExtrasHub"
+    g.ResetOnSpawn = false
+    g.IgnoreGuiInset = true
+    g.DisplayOrder = 98
+    g.Enabled = State.hubOpen
+    g.Parent = CoreGui
+
+    local main = Instance.new("Frame")
+    main.Size = UDim2.new(0, 260, 0, 60 + 300 + 50)
+    main.Position = UDim2.new(0.5, -130, 0.5, -200)
+    main.BackgroundColor3 = CONFIG.BG_DARK
+    main.BorderSizePixel = 0
+    main.Active = true
+    main.Parent = g
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 14)
+    local s1 = Instance.new("UIStroke")
+    s1.Color = CONFIG.ACCENT_BRIGHT; s1.Thickness = 2; s1.Parent = main
+
+    -- Header
+    local header = Instance.new("Frame")
+    header.Size = UDim2.new(1, 0, 0, 50)
+    header.BackgroundColor3 = CONFIG.ACCENT
+    header.BorderSizePixel = 0
+    header.Parent = main
+    local hc = Instance.new("UICorner"); hc.CornerRadius = UDim.new(0, 14); hc.Parent = header
+    local hcFix = Instance.new("Frame")
+    hcFix.Size = UDim2.new(1, 0, 0, 14)
+    hcFix.Position = UDim2.new(0, 0, 1, -14)
+    hcFix.BackgroundColor3 = CONFIG.ACCENT
+    hcFix.BorderSizePixel = 0
+    hcFix.Parent = header
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -70, 1, 0)
+    title.Position = UDim2.new(0, 16, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "💠 Imp3rson Extras"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 16
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = header
+
+    local btnClose = Instance.new("TextButton")
+    btnClose.Size = UDim2.new(0, 34, 0, 34)
+    btnClose.Position = UDim2.new(1, -44, 0, 8)
+    btnClose.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
+    btnClose.BorderSizePixel = 0
+    btnClose.Text = "✕"
+    btnClose.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnClose.Font = Enum.Font.GothamBold
+    btnClose.TextSize = 16
+    btnClose.Parent = header
+    Instance.new("UICorner", btnClose).CornerRadius = UDim.new(0, 8)
+    btnClose.MouseButton1Click:Connect(toggleHub)
+
+    -- Drag
+    local dragH, startH, startPH
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragH = true; startH = input.Position; startPH = main.Position
+        end
+    end)
+    header.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then dragH = false end
+    end)
+    header.InputChanged:Connect(function(input)
+        if not dragH then return end
+        if input.UserInputType == Enum.UserInputType.Touch then
+            local d = input.Position - startH
+            main.Position = UDim2.new(
+                startPH.X.Scale, startPH.X.Offset + d.X,
+                startPH.Y.Scale, startPH.Y.Offset + d.Y)
+        end
+    end)
+
+    -- Scroll
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Name = "Scroll"
+    scroll.Size = UDim2.new(1, 0, 1, -50 - 42)
+    scroll.Position = UDim2.new(0, 0, 0, 50)
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = CONFIG.ACCENT_BRIGHT
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.Parent = main
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 12)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = scroll
+    local pad = Instance.new("UIPadding")
+    pad.PaddingTop = UDim.new(0, 8)
+    pad.PaddingBottom = UDim.new(0, 8)
+    pad.PaddingLeft = UDim.new(0, 8)
+    pad.PaddingRight = UDim.new(0, 8)
+    pad.Parent = scroll
+
+    -- Botões
+    for i, info in ipairs(SCRIPTS) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 46)
+        btn.BackgroundColor3 = CONFIG.BG_CARD
+        btn.BorderSizePixel = 0
+        btn.Text = info.name
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 14
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.LayoutOrder = i
+        btn.AutoButtonColor = true
+        btn.Parent = scroll
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+        local p = Instance.new("UIPadding"); p.PaddingLeft = UDim.new(0, 14); p.Parent = btn
+
+        local baseColor = CONFIG.BG_CARD
+        btn.MouseEnter:Connect(function()
+            if not State.loaded[info.url] then
+                TweenService:Create(btn, TweenInfo.new(0.15),
+                    { BackgroundColor3 = CONFIG.ACCENT }):Play()
+            end
+        end)
+        btn.MouseLeave:Connect(function()
+            if not State.loaded[info.url] then
+                TweenService:Create(btn, TweenInfo.new(0.15),
+                    { BackgroundColor3 = baseColor }):Play()
+            end
+        end)
+
+        btn.MouseButton1Click:Connect(function()
+            if btn:GetAttribute("Loading") then return end
+            btn:SetAttribute("Loading", true)
+            local oldText = info.name
+            btn.Text = "⏳ Carregando..."
+            local ok = _G.Imp3rsonHub.runScript(info, btn)
+            task.wait(0.5)
+            if ok then
+                btn.Text = "✅ " .. oldText
+                btn.BackgroundColor3 = Color3.fromRGB(40, 80, 50)
+            else
+                btn.Text = "❌ Falhou"
+                btn.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
+                task.delay(2, function()
+                    if isSafe(btn) then
+                        btn.Text = oldText
+                        btn.BackgroundColor3 = baseColor
+                    end
+                end)
+            end
+            btn:SetAttribute("Loading", false)
+        end)
+    end
+
+    local footer = Instance.new("TextLabel")
+    footer.Size = UDim2.new(1, -16, 0, 32)
+    footer.Position = UDim2.new(0, 8, 1, -40)
+    footer.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    footer.BorderSizePixel = 0
+    footer.Text = "Toque no 💠 para abrir/fechar"
+    footer.TextColor3 = Color3.fromRGB(200, 200, 200)
+    footer.Font = Enum.Font.Gotham
+    footer.TextSize = 11
+    footer.Parent = main
+    Instance.new("UICorner", footer).CornerRadius = UDim.new(0, 6)
+end
+
+----------------------------------------------------------------
+-- BOOT PARTE 1
+----------------------------------------------------------------
+createFloatingButton()
+createHub()
+notify("💠 Imp3rson Parte 1 OK — carregando ESP...", CONFIG.ACCENT_BRIGHT)
+print("[✅] Imp3rson Hub — PARTE 1/2 OK")
+
+-- ============================================
+-- 💠 Imp3rson Extras Hub (v7) — PARTE 2/2
+-- ESP Professional + sistema runScript
+-- ============================================
+
+local H = _G.Imp3rsonHub
+if not H then
+    warn("[Imp3rson] Rode a PARTE 1 primeiro!")
+    return
+end
+
+local CoreGui     = H.CoreGui
+local Players     = H.Players
+local TweenService = H.TweenService
+local UIS         = H.UIS
+local CONFIG      = H.CONFIG
+local State       = H.State
+local notify      = H.notify
+
+local function isSafe(v) return typeof(v) == "Instance" and v.Parent ~= nil end
+
+----------------------------------------------------------------
+-- ESP PROFISSIONAL
+----------------------------------------------------------------
+local function runESP()
+    local Players_ = game:GetService("Players")
+    local RunService_ = game:GetService("RunService")
+    local UIS_ = game:GetService("UserInputService")
+    local CoreGui_ = game:GetService("CoreGui")
+    local LocalPlayer = Players_.LocalPlayer
+
+    local Settings = {
+        Enabled = true, Box = true, Tracers = true, Names = true,
+        Distance = true, HealthBar = true, Chams = true,
+        TeamCheck = false, AliveCheck = true, MaxDistance = 500,
+        TracerOrigin = 1, Color = Color3.fromRGB(255, 45, 45),
+    }
+    local ORIGINS = {"Bottom", "Center", "Mouse"}
+
+    local drawingOK = pcall(function() local t = Drawing.new("Line") t:Remove() end)
+    local cache, unloaded = {}, false
+
+    local function getRoot(char) return char and char:FindFirstChild("HumanoidRootPart") end
+    local function getHum(char) return char and char:FindFirstChildOfClass("Humanoid") end
+
+    local function wipeDrawings(c)
+        if c.draw then for _, o in pairs(c.draw) do pcall(function() o:Remove() end) end c.draw = nil end
+        if c.chams then pcall(function() c.chams:Destroy() end) c.chams, c.chamsChar = nil, nil end
+    end
+
+    local function ensureDrawings(c)
+        if c.draw then return c.draw end
+        local d = {}
+        d.box = Drawing.new("Quad"); d.box.Thickness = 1.5; d.box.Filled = false; d.box.ZIndex = 2
+        d.tracer = Drawing.new("Line"); d.tracer.Thickness = 1.2; d.tracer.ZIndex = 1
+        d.name = Drawing.new("Text"); d.name.Size = 14; d.name.Center = true; d.name.Outline = true; d.name.ZIndex = 3
+        d.dist = Drawing.new("Text"); d.dist.Size = 12; d.dist.Center = true; d.dist.Outline = true; d.dist.ZIndex = 3
+        d.hpBg = Drawing.new("Line"); d.hpBg.Thickness = 4; d.hpBg.Color = Color3.fromRGB(0,0,0); d.hpBg.ZIndex = 2
+        d.hpFill = Drawing.new("Line"); d.hpFill.Thickness = 2.5; d.hpFill.ZIndex = 3
+        c.draw = d
+        return d
+    end
+
+    local function hideAll(c)
+        if c.draw then for _, o in pairs(c.draw) do o.Visible = false end end
+    end
+
+    Players_.PlayerRemoving:Connect(function(plr)
+        if cache[plr] then wipeDrawings(cache[plr]) cache[plr] = nil end
+    end)
+
+    RunService_.RenderStepped:Connect(function()
+        if unloaded then return end
+        local cam = workspace.CurrentCamera
+        if not cam then return end
+        local myRoot = getRoot(LocalPlayer.Character)
+        for _, plr in ipairs(Players_:GetPlayers()) do
+            local c = cache[plr]
+            if not c then c = {}; cache[plr] = c end
+            if plr == LocalPlayer or not Settings.Enabled then
+                hideAll(c); wipeDrawings(c)
+            else
+                local char = plr.Character
+                local hum = getHum(char)
+                local root = getRoot(char)
+                local pass = char and hum and root
+                if pass and Settings.AliveCheck and hum.Health <= 0 then pass = false end
+                if pass and Settings.TeamCheck and LocalPlayer.Team and plr.Team == LocalPlayer.Team then pass = false end
+                local dist = 0
+                if pass and myRoot then
+                    dist = (root.Position - myRoot.Position).Magnitude
+                    if dist > Settings.MaxDistance then pass = false end
+                end
+                if Settings.Chams and char then
+                    if not c.chams or c.chamsChar ~= char or not c.chams.Parent then
+                        if c.chams then pcall(function() c.chams:Destroy() end) end
+                        local h = Instance.new("Highlight")
+                        h.FillColor = Settings.Color; h.FillTransparency = 0.55
+                        h.OutlineColor = Settings.Color; h.OutlineTransparency = 0
+                        h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        h.Parent = char
+                        c.chams, c.chamsChar = h, char
+                    else
+                        c.chams.FillColor = Settings.Color; c.chams.OutlineColor = Settings.Color
+                    end
+                elseif c.chams then
+                    pcall(function() c.chams:Destroy() end) c.chams, c.chamsChar = nil, nil
+                end
+                if pass and drawingOK then
+                    local d = ensureDrawings(c)
+                    local sp, onScreen = cam:WorldToViewportPoint(root.Position)
+                    local topSp = cam:WorldToViewportPoint(root.Position + Vector3.new(0, 3, 0))
+                    local botSp = cam:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
+                    local h = math.abs(topSp.Y - botSp.Y)
+                    local w = h * 0.6
+                    local cx, top, bottom = sp.X, topSp.Y, botSp.Y
+                    local col = Settings.Color
+                    d.box.Visible = Settings.Box and onScreen and h > 4
+                    if d.box.Visible then
+                        d.box.Color = col
+                        d.box.PointA = Vector2.new(cx - w/2, top); d.box.PointB = Vector2.new(cx + w/2, top)
+                        d.box.PointC = Vector2.new(cx + w/2, bottom); d.box.PointD = Vector2.new(cx - w/2, bottom)
+                    end
+                    d.tracer.Visible = Settings.Tracers
+                    if d.tracer.Visible then
+                        d.tracer.Color = col
+                        local vs = cam.ViewportSize
+                        local from = Settings.TracerOrigin == 1 and Vector2.new(vs.X/2, vs.Y)
+                            or Settings.TracerOrigin == 2 and Vector2.new(vs.X/2, vs.Y/2)
+                            or UIS_:GetMouseLocation()
+                        d.tracer.From = from; d.tracer.To = Vector2.new(cx, bottom)
+                    end
+                    d.name.Visible = Settings.Names and onScreen
+                    if d.name.Visible then d.name.Text = plr.DisplayName; d.name.Color = col; d.name.Position = Vector2.new(cx, top - 30) end
+                    d.dist.Visible = Settings.Distance and onScreen
+                    if d.dist.Visible then d.dist.Text = math.floor(dist).."m"; d.dist.Color = Color3.fromRGB(230,230,230); d.dist.Position = Vector2.new(cx, top - 16) end
+                    d.hpBg.Visible = Settings.HealthBar and onScreen and h > 4
+                    d.hpFill.Visible = d.hpBg.Visible
+                    if d.hpBg.Visible then
+                        local x = cx - w/2 - 6
+                        local frac = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+                        d.hpBg.From = Vector2.new(x, top); d.hpBg.To = Vector2.new(x, bottom)
+                        d.hpFill.Color = Color3.fromHSV(frac * 0.33, 1, 1)
+                        d.hpFill.From = Vector2.new(x, bottom - (bottom - top) * frac)
+                        d.hpFill.To = Vector2.new(x, bottom)
+                    end
+                else
+                    hideAll(c)
+                end
+            end
+        end
+    end)
+
+    -- UI
+    local ACCENT = Color3.fromRGB(255, 45, 45)
+    local BG = Color3.fromRGB(16, 16, 18)
+    local CARD = Color3.fromRGB(32, 32, 36)
+
+    local ScreenGui_ = Instance.new("ScreenGui")
+    ScreenGui_.Name = "Imp3rsonESP"
+    ScreenGui_.Parent = CoreGui_
+    ScreenGui_.ResetOnSpawn = false
+    ScreenGui_.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    local Window = Instance.new("Frame")
+    Window.Parent = ScreenGui_
+    Window.BackgroundColor3 = BG
+    Window.Position = UDim2.new(0.5, -160, 0.5, -180)
+    Window.Size = UDim2.new(0, 320, 0, 360)
+    Window.ZIndex = 1
+    Instance.new("UICorner", Window).CornerRadius = UDim.new(0, 12)
+    local wStroke = Instance.new("UIStroke"); wStroke.Color = ACCENT; wStroke.Thickness = 1.4; wStroke.Parent = Window
+
+    local Title = Instance.new("TextLabel")
+    Title.Parent = Window; Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 12, 0, 7); Title.Size = UDim2.new(1, -80, 0, 20)
+    Title.Font = Enum.Font.GothamBold; Title.Text = "👁️ Imp3rson ESP  •  PRO"
+    Title.TextColor3 = Color3.fromRGB(255,255,255); Title.TextSize = 15
+    Title.TextXAlignment = Enum.TextXAlignment.Left; Title.ZIndex = 2
+
+    local underline = Instance.new("Frame")
+    underline.Parent = Window; underline.BackgroundColor3 = ACCENT
+    underline.Position = UDim2.new(0, 12, 0, 32); underline.Size = UDim2.new(1, -24, 0, 2)
+    underline.ZIndex = 2
+
+    local function winBtn(text, xOffset)
+        local b = Instance.new("TextButton")
+        b.Parent = Window; b.BackgroundColor3 = CARD
+        b.Position = UDim2.new(1, xOffset, 0, 4); b.Size = UDim2.new(0, 26, 0, 26)
+        b.Font = Enum.Font.GothamBold; b.Text = text
+        b.TextColor3 = Color3.fromRGB(255,255,255); b.TextSize = 14; b.ZIndex = 3
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+        return b
+    end
+    local minBtn = winBtn("—", -62)
+    local closeBtn = winBtn("X", -32)
+
+    local Body = Instance.new("Frame")
+    Body.Parent = Window; Body.BackgroundTransparency = 1
+    Body.Position = UDim2.new(0, 0, 0, 40); Body.Size = UDim2.new(1, 0, 1, -40)
+    Body.ZIndex = 2
+
+    local function addToggle(i, label, key)
+        local row, col = math.floor((i-1)/2), (i-1)%2
+        local b = Instance.new("TextButton")
+        b.Parent = Body; b.BackgroundColor3 = CARD
+        b.Position = UDim2.new(0, 12 + col*152, 0, 8 + row*34)
+        b.Size = UDim2.new(0, 144, 0, 30)
+        b.Font = Enum.Font.GothamMedium; b.TextColor3 = Color3.fromRGB(255,255,255); b.TextSize = 13; b.ZIndex = 2
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+        local function refresh()
+            b.Text = (Settings[key] and "● " or "○ ") .. label
+            b.BackgroundColor3 = Settings[key] and ACCENT or CARD
+        end
+        b.MouseButton1Click:Connect(function() Settings[key] = not Settings[key]; refresh() end)
+        refresh()
+    end
+    addToggle(1, "ESP Master", "Enabled")
+    addToggle(2, "Box ESP", "Box")
+    addToggle(3, "Tracers", "Tracers")
+    addToggle(4, "Names", "Names")
+    addToggle(5, "Distance", "Distance")
+    addToggle(6, "Health Bar", "HealthBar")
+    addToggle(7, "Chams", "Chams")
+    addToggle(8, "Team Check", "TeamCheck")
+    addToggle(9, "Alive Check", "AliveCheck")
+
+    local colorLbl = Instance.new("TextLabel")
+    colorLbl.Parent = Body; colorLbl.BackgroundTransparency = 1
+    colorLbl.Position = UDim2.new(0, 12, 0, 178); colorLbl.Size = UDim2.new(0, 100, 0, 16)
+    colorLbl.Font = Enum.Font.GothamBold; colorLbl.Text = "COLOR"
+    colorLbl.TextColor3 = Color3.fromRGB(150,150,150); colorLbl.TextSize = 11
+    colorLbl.TextXAlignment = Enum.TextXAlignment.Left; colorLbl.ZIndex = 2
+
+    local COLORS = {
+        Color3.fromRGB(255,45,45), Color3.fromRGB(255,150,0), Color3.fromRGB(255,230,0),
+        Color3.fromRGB(80,255,120), Color3.fromRGB(0,220,255), Color3.fromRGB(190,80,255),
+    }
+    local selStrokes = {}
+    for i, colr in ipairs(COLORS) do
+        local s = Instance.new("TextButton")
+        s.Parent = Body; s.Text = ""; s.BackgroundColor3 = colr
+        s.Position = UDim2.new(0, 12 + (i-1)*38, 0, 196); s.Size = UDim2.new(0, 30, 0, 30); s.ZIndex = 2
+        Instance.new("UICorner", s).CornerRadius = UDim.new(0, 8)
+        local st = Instance.new("UIStroke"); st.Color = Color3.new(1,1,1); st.Thickness = 2; st.Transparency = 1; st.Parent = s
+        table.insert(selStrokes, st)
+        if i == 1 then st.Transparency = 0 end
+        s.MouseButton1Click:Connect(function()
+            Settings.Color = colr
+            for _, x in ipairs(selStrokes) do x.Transparency = 1 end
+            st.Transparency = 0
+        end)
+    end
+
+    local cur = Settings.MaxDistance
+    local sLbl = Instance.new("TextLabel")
+    sLbl.Parent = Body; sLbl.BackgroundTransparency = 1
+    sLbl.Position = UDim2.new(0, 12, 0, 236); sLbl.Size = UDim2.new(0, 118, 0, 30)
+    sLbl.Font = Enum.Font.GothamMedium; sLbl.TextColor3 = Color3.fromRGB(255,255,255); sLbl.TextSize = 13
+    sLbl.TextXAlignment = Enum.TextXAlignment.Left; sLbl.ZIndex = 2
+    local track = Instance.new("Frame")
+    track.Parent = Body; track.BackgroundColor3 = Color3.fromRGB(45,45,50)
+    track.Position = UDim2.new(0, 132, 0, 246); track.Size = UDim2.new(0, 118, 0, 10); track.ZIndex = 2
+    Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+    local fill = Instance.new("Frame")
+    fill.Parent = track; fill.BackgroundColor3 = ACCENT; fill.Size = UDim2.new(0,0,1,0); fill.ZIndex = 3
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+    local function sRefresh()
+        sLbl.Text = "Max Dist: "..cur.."m"
+        fill.Size = UDim2.new((cur-50)/(2000-50), 0, 1, 0)
+        Settings.MaxDistance = cur
+    end
+    local function sSet(v) cur = math.clamp(math.floor(v/50+0.5)*50, 50, 2000); sRefresh() end
+    local mBtn = winBtn("-", 0); mBtn.Parent = Body; mBtn.Position = UDim2.new(0, 254, 0, 239); mBtn.Size = UDim2.new(0, 24, 0, 24)
+    local pBtn = winBtn("+", 0); pBtn.Parent = Body; pBtn.Position = UDim2.new(0, 282, 0, 239); pBtn.Size = UDim2.new(0, 24, 0, 24)
+    mBtn.MouseButton1Click:Connect(function() sSet(cur - 50) end)
+    pBtn.MouseButton1Click:Connect(function() sSet(cur + 50) end)
+    local sliding = false
+    track.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            sliding = true
+            sSet(50 + 1950 * math.clamp((i.Position.X - track.AbsolutePosition.X)/track.AbsoluteSize.X, 0, 1))
+        end
+    end)
+    track.InputChanged:Connect(function(i)
+        if sliding and (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement) then
+            sSet(50 + 1950 * math.clamp((i.Position.X - track.AbsolutePosition.X)/track.AbsoluteSize.X, 0, 1))
+        end
+    end)
+    track.InputEnded:Connect(function() sliding = false end)
+    sRefresh()
+
+    local orgBtn = Instance.new("TextButton")
+    orgBtn.Parent = Body; orgBtn.BackgroundColor3 = CARD
+    orgBtn.Position = UDim2.new(0, 12, 0, 276); orgBtn.Size = UDim2.new(0, 144, 0, 30)
+    orgBtn.Font = Enum.Font.GothamMedium; orgBtn.TextColor3 = Color3.fromRGB(255,255,255); orgBtn.TextSize = 13; orgBtn.ZIndex = 2
+    Instance.new("UICorner", orgBtn).CornerRadius = UDim.new(0, 8)
+    orgBtn.Text = "Tracer: "..ORIGINS[Settings.TracerOrigin]
+    orgBtn.MouseButton1Click:Connect(function()
+        Settings.TracerOrigin = Settings.TracerOrigin % 3 + 1
+        orgBtn.Text = "Tracer: "..ORIGINS[Settings.TracerOrigin]
+    end)
+
+    local footer = Instance.new("TextLabel")
+    footer.Parent = Body; footer.BackgroundTransparency = 1
+    footer.Position = UDim2.new(0, 164, 0, 276); footer.Size = UDim2.new(0, 144, 0, 30)
+    footer.Font = Enum.Font.GothamMedium; footer.Text = "Imp3rson © 2026"
+    footer.TextColor3 = Color3.fromRGB(110,110,110); footer.TextSize = 11; footer.ZIndex = 2
+
+    -- Drag
+    local dragFrame = Instance.new("Frame")
+    dragFrame.Parent = Window; dragFrame.BackgroundTransparency = 1
+    dragFrame.Position = UDim2.new(0, 0, 0, 0); dragFrame.Size = UDim2.new(1, -70, 0, 34); dragFrame.ZIndex = 2
+    local dragging, dragStart, startPos = false, nil, nil
+    dragFrame.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true; dragStart = i.Position; startPos = Window.Position
+            i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then dragging = false end end)
+        end
+    end)
+    UIS_.InputChanged:Connect(function(i)
+        if dragging and (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement) then
+            local d = i.Position - dragStart
+            Window.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+        end
+    end)
+
+    local minimized = false
+    minBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        Body.Visible = not minimized
+        minBtn.Text = minimized and "□" or "—"
+        Window.Size = minimized and UDim2.new(0, 320, 0, 40) or UDim2.new(0, 320, 0, 360)
+    end)
+
+    local function cleanupESP()
+        unloaded = true
+        for _, c in pairs(cache) do wipeDrawings(c) end
+        cache = {}
+        ScreenGui_:Destroy()
+    end
+    closeBtn.MouseButton1Click:Connect(cleanupESP)
+
+    -- Botão flutuante do ESP
+    local floatBtn = Instance.new("TextButton")
+    floatBtn.Parent = ScreenGui_
+    floatBtn.BackgroundColor3 = ACCENT
+    floatBtn.Position = UDim2.new(0, 8, 0.5, -23)
+    floatBtn.Size = UDim2.new(0, 46, 0, 46)
+    floatBtn.Font = Enum.Font.GothamBold; floatBtn.Text = "👁️"
+    floatBtn.TextColor3 = Color3.fromRGB(255,255,255); floatBtn.TextSize = 20; floatBtn.ZIndex = 6
+    Instance.new("UICorner", floatBtn).CornerRadius = UDim.new(1, 0)
+    local fbS = Instance.new("UIStroke"); fbS.Color = Color3.new(1,1,1); fbS.Thickness = 1.5; fbS.Parent = floatBtn
+    floatBtn.MouseButton1Click:Connect(function() Window.Visible = not Window.Visible end)
+
+    print("[✅] Imp3rson ESP PRO carregado!")
+end
+
+----------------------------------------------------------------
+-- RUNSCRIPT
+----------------------------------------------------------------
+local function runScript(info, btn)
+    if State.loaded[info.url] then
+        notify("⚠️ " .. info.name .. " já foi carregado", Color3.fromRGB(255, 180, 0))
+        return false
+    end
+    local ok, err
+    if info.url == "ESP_PRO" then
+        ok, err = pcall(runESP)
+    else
+        ok, err = pcall(function()
+            loadstring(game:HttpGet(info.url))()
+        end)
+    end
+    if ok then
+        State.loaded[info.url] = true
+        notify("✅ " .. info.name, CONFIG.GREEN)
+    else
+        notify("❌ Falha: " .. info.name, Color3.fromRGB(255, 60, 60))
+        warn("[Imp3rson] " .. tostring(err))
+    end
+    return ok
+end
+_G.Imp3rsonHub.runScript = runScript
+
+----------------------------------------------------------------
+-- BOOT PARTE 2
+----------------------------------------------------------------
+notify("💠 Imp3rson v7 pronto! (10 scripts)", CONFIG.ACCENT_BRIGHT)
+print("[✅] Imp3rson Hub — PARTE 2/2 OK (ESP PRO embutido)")
